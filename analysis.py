@@ -7,9 +7,7 @@ from sklearn.preprocessing import StandardScaler
 import warnings
 warnings.filterwarnings('ignore')
 
-# ==============
-# Helper Functions
-# ==============
+
 def handle_missing_values(df):
     df = df.copy()
     df['Cinsiyet'].fillna(df['Cinsiyet'].mode()[0], inplace=True)
@@ -41,10 +39,10 @@ def create_binary_features(df, column, prefix, top_n=5):
 
 def encode_and_scale(df):
     df = df.copy()
-    # One-hot encode
+
     df = pd.get_dummies(df, columns=['Cinsiyet','Age_Category','Uyruk','KanGrubu'],
                         prefix=['Gender','Age','Country','BloodType'], drop_first=True)
-    # Impute + scale age
+   
     imputer = SimpleImputer(strategy='median')
     scaler = StandardScaler()
     df['Yas'] = imputer.fit_transform(df[['Yas']])
@@ -59,23 +57,19 @@ def preprocess_data(df):
     df = encode_and_scale(df)
     return df
 
-# ========================
-# Load and Explore Dataset
-# ========================
+
 df = pd.read_excel("Talent_Academy_Case_DT_2025.xlsx")
 print(f"Dataset loaded. Shape: {df.shape}")
 
-# Extract numeric treatment duration
+
 df['TedaviSuresi_Clean'] = df['TedaviSuresi'].str.extract(r'(\d+)').astype(int)
 
-# Quick summary
+
 print(df.info())
 print(df.describe())
 print("Missing values:\n", df.isnull().sum())
 
-# ========================
-# Exploratory Data Analysis
-# ========================
+
 plt.figure(figsize=(12,4))
 plt.subplot(1,2,1); df['TedaviSuresi_Clean'].hist(bins=20); plt.title("Treatment Duration")
 plt.subplot(1,2,2); sns.boxplot(y=df['TedaviSuresi_Clean']); plt.title("Duration Boxplot")
@@ -83,19 +77,17 @@ plt.tight_layout(); plt.show()
 
 print("Correlation (Age vs Treatment Duration):", df['Yas'].corr(df['TedaviSuresi_Clean']))
 
-# ==================
-# Run Pipeline
-# ==================
+
 df_processed = preprocess_data(df)
 
-# Separate features and target
+
 X = df_processed.drop(columns=['TedaviSuresi','TedaviSuresi_Clean'])
 y = df_processed['TedaviSuresi_Clean']
 
 print(f"\nFinal dataset: {X.shape[0]} samples, {X.shape[1]} features")
 print("Target range:", y.min(), "-", y.max())
 
-# Save outputs
+
 df_processed.to_csv("processed_medical_data_complete.csv", index=False)
 X.to_csv("model_features.csv", index=False)
 y.to_csv("model_target.csv", index=False)
